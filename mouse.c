@@ -45,10 +45,12 @@ struct packet* mouse_login(char* device_secret){
 }
 
 struct packet* mouse_report(struct packet* p){
+	struct packet* p_report;
 	return NULL;
 }
 
 struct packet* mouse_control(){
+	struct packet* p_control;
 	return NULL;
 }
 
