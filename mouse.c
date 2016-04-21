@@ -33,6 +33,7 @@ int mouse_init(int d, char* host_name, int port)
         printf("Connect Error:%s\a\n", strerror(errno));
         exit(1);
     }
+    return 0;
 }
 
 struct packet* mouse_login(char* device_secret)
@@ -84,6 +85,7 @@ int send_packet(struct packet* p)
     printf("%d byte has been sent.\n", p->content_length + 1);
 
     free(buffer);
+    return 0;
 }
 
 struct packet* packet_allocate()
