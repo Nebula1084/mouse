@@ -32,4 +32,4 @@ void packet_put(struct packet* p, double n);
 void packet_put(struct packet* p, char n);
 void packet_put(struct packet* p, unsigned char* buffer, int length);
 
-#endif
+#endif //_MOUSE_H
