@@ -1,6 +1,17 @@
+CC = g++
+TARGET = sample
+
+.PHONY: clean all
+
+all: sample
+
 sample: sample.o mouse.o
-	g++ -o sample sample.o mouse.o
+	$(CC) -o $(TARGET) $^
 sample.o: sample.c mouse.h
-	g++ -c sample.c
+	$(CC) -c $<
 mouse.o: mouse.c mouse.h
-	g++ -c mouse.c
+	$(CC) -c $<
+
+clean:
+	rm -rf *.o
+	rm -rf $(TARGET)
