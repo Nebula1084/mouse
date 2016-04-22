@@ -4,10 +4,27 @@
 #define MOUSE_HOST "localhost"
 #define MOUSE_PORT 10659
 
-int main(){
+typedef struct testdata {
+    float a;
+    double b;
+} testdata;
+
+packet* pack_two_float(packet* p, void* data)
+{
+    testdata* dataptr = (testdata*)data;
+    packet_put_float(p, dataptr->a);
+    packet_put_double(p, dataptr->b);
+    return p;
+}
+
+int main()
+{
     printf("hello!\n");
-	mouse_init(10, MOUSE_HOST, MOUSE_PORT);
-	mouse_login("abcdefghijklmnopqrstuvwxyzabcdef");
-	mouse_logout();
-	return 0;
+    mouse_init(10, MOUSE_HOST, MOUSE_PORT);
+    mouse_login("abcdefghijklmnopqrstuvwxyzabcdef");
+
+    testdata data = { 0.4f, 0.005 };
+    mouse_report(pack_two_float, (void*)&data);
+    mouse_logout();
+    return 0;
 }

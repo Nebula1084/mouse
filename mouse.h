@@ -10,31 +10,33 @@ enum MESSAGE_TYPE {
 	LOGOUT = 5
 };
 
-struct packet {
+typedef struct packet {
 	unsigned char message_type;
 	unsigned char* payload;
 	int size;
 	int content_length;
-};
+}packet;
+
+typedef packet* (*packingfunc)(packet*, void*);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 int mouse_init(int device_id, char* host_name, int port);
-struct packet* mouse_login(char* device_secret);
-struct packet* mouse_report(struct packet* p);
-struct packet* mouse_control();
-struct packet* mouse_logout();
+packet* mouse_login(char* device_secret);
+packet* mouse_report(packingfunc func, void* data);
+packet* mouse_control();
+packet* mouse_logout();
 
-struct packet* packet_allocate();
-void packet_free(struct packet* p);
-int send_packet(struct packet* p);
-void packet_put_int(struct packet* p, int n);
-void packet_put_float(struct packet* p, float n);
-void packet_put_double(struct packet* p, double n);
-void packet_put_char(struct packet* p, char n);
-void packet_put_buffer(struct packet* p, unsigned char* buffer, int length);
+packet* packet_allocate();
+void packet_free(packet* p);
+int send_packet(packet* p);
+void packet_put_int(packet* p, int n);
+void packet_put_float(packet* p, float n);
+void packet_put_double(packet* p, double n);
+void packet_put_char(packet* p, char n);
+void packet_put_buffer(packet* p, unsigned char* buffer, int length);
 
 #ifdef __cplusplus
 }
