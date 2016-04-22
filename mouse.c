@@ -94,24 +94,12 @@ void _print_head(packet* p)
 {
     dbg_print("Message type: ");
     switch (p->message_type) {
-    case ACK:
-        dbg_print("ACK\n");
-        break;
-    case NACK:
-        dbg_print("NACK\n");
-        break;
-    case LOGIN:
-        dbg_print("LOGIN\n");
-        break;
-    case REPORT:
-        dbg_print("REPORT\n");
-        break;
-    case CONTROL:
-        dbg_print("CONTROL\n");
-        break;
-    case LOGOUT:
-        dbg_print("LOGOUT\n");
-        break;
+        case ACK:       dbg_print("ACK\n");     break;
+        case NACK:      dbg_print("NACK\n");    break;
+        case LOGIN:     dbg_print("LOGIN\n");   break;
+        case REPORT:    dbg_print("REPORT\n");  break;
+        case CONTROL:   dbg_print("CONTROL\n"); break;
+        case LOGOUT:    dbg_print("LOGOUT\n");  break;
     }
 }
 
