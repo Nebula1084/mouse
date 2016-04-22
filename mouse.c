@@ -9,10 +9,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-int sockfd;
-int device_id;
-struct sockaddr_in server_addr;
-struct hostent* host;
+static int sockfd;
+static int device_id;
+static struct sockaddr_in server_addr;
+static struct hostent* host;
 
 int mouse_init(int d, char* host_name, int port)
 {
@@ -40,8 +40,8 @@ struct packet* mouse_login(char* device_secret)
 {
     struct packet* p_login = packet_allocate();
     p_login->message_type = LOGIN;
-    packet_put(p_login, device_id);
-    packet_put(p_login, (unsigned char*)device_secret, 32);
+    packet_put_int(p_login, device_id);
+    packet_put_buffer(p_login, (unsigned char*)device_secret, 32);
     send_packet(p_login);
     packet_free(p_login);
     return NULL;
@@ -107,28 +107,28 @@ void packet_free(struct packet* p)
     free(p);
 }
 
-void packet_put(struct packet* p, int n)
+void packet_put_int(struct packet* p, int n)
 {
     printf("packet_put():%d\n", n);
-    packet_put(p, (unsigned char*)&n, sizeof(n));
+    packet_put_buffer(p, (unsigned char*)&n, sizeof(n));
 }
 
-void packet_put(struct packet* p, float n)
+void packet_put_float(struct packet* p, float n)
 {
-    packet_put(p, (unsigned char*)&n, sizeof(n));
+    packet_put_buffer(p, (unsigned char*)&n, sizeof(n));
 }
 
-void packet_put(struct packet* p, double n)
+void packet_put_double(struct packet* p, double n)
 {
-    packet_put(p, (unsigned char*)&n, sizeof(n));
+    packet_put_buffer(p, (unsigned char*)&n, sizeof(n));
 }
 
-void packet_put(struct packet* p, char n)
+void packet_put_char(struct packet* p, char n)
 {
-    packet_put(p, (unsigned char*)&n, sizeof(n));
+    packet_put_buffer(p, (unsigned char*)&n, sizeof(n));
 }
 
-void packet_put(struct packet* p, unsigned char* buffer, int length)
+void packet_put_buffer(struct packet* p, unsigned char* buffer, int length)
 {
     int re_alloc = 0;
     while (p->size < p->content_length + length) {
