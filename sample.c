@@ -25,6 +25,7 @@ int main()
 
     testdata data = { 0.4f, 0.005 };
     mouse_report(pack_two_float, (void*)&data);
+    
     mouse_logout();
     return 0;
 }

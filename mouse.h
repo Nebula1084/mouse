@@ -18,20 +18,26 @@ typedef struct packet {
 }packet;
 
 typedef packet* (*packingfunc)(packet*, void*);
+typedef packingfunc parsingfunc;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 int mouse_init(int device_id, char* host_name, int port);
-packet* mouse_login(char* device_secret);
-packet* mouse_report(packingfunc func, void* data);
-packet* mouse_control();
-packet* mouse_logout();
+int mouse_login(char* device_secret);
+
+int mouse_report(packingfunc func, void* data);
+int mouse_control_send(packingfunc func, void* data);
+packet* mouse_control_recv();
+int mouse_logout();
 
 packet* packet_allocate();
+packet* packet_reallocate(packet* p, int new_size);
 void packet_free(packet* p);
 int send_packet(packet* p);
+packet* recv_packet();
+
 void packet_put_int(packet* p, int n);
 void packet_put_float(packet* p, float n);
 void packet_put_double(packet* p, double n);
@@ -41,5 +47,9 @@ void packet_put_buffer(packet* p, unsigned char* buffer, int length);
 #ifdef __cplusplus
 }
 #endif
+
+#define PACKET_TYPE(p) (((packet*)(p))->message_type)
+#define PACKET_ACK_CHECK(p) (PACKET_TYPE(p) == ACK)
+#define PACKET_NACK_CHECK(p) (PACKET_TYPE(p) == NACK)
 
 #endif /* _MOUSE_H */

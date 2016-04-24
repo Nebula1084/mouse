@@ -1,5 +1,5 @@
 CC = gcc
-CC_FLAG = -Wall
+CFLAGS = -Wall -g
 
 TARGET = sample
 
@@ -10,9 +10,9 @@ all: sample
 sample: sample.o mouse.o
 	$(CC) -o $(TARGET) $^
 sample.o: sample.c mouse.h
-	$(CC) $(CC_FLAG) -c $<
+	$(CC) $(CFLAGS) -c $<
 mouse.o: mouse.c mouse.h
-	$(CC) $(CC_FLAG) -c $<
+	$(CC) $(CFLAGS) -c $<
 
 clean:
 	rm -rf *.o
