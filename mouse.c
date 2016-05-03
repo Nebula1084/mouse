@@ -26,6 +26,10 @@ static int device_id;
 static struct sockaddr_in server_addr;
 static struct hostent* host;
 
+static packet local_ACK;
+static packet local_NACK;
+static packet local_CONTROL_ASK;
+
 int mouse_init(int d, char* host_name, int port)
 {
     device_id = d;
@@ -59,14 +63,17 @@ int mouse_login(char* device_secret)
     send_packet(p_login);
     packet_free(p_login);
     dbg_print("---Waiting ACK packet---\n");
-    packet* p_ACK =recv_packet();
+    packet* p_ACK = recv_packet();
     if (PACKET_ACK_CHECK(p_ACK)) {
         dbg_print("recv ACK.\n");
     }
+    else if (PACKET_NACK_CHECK(p_ACK)) {
+        dbg_print("recv NACK.\n");
+    }
     else {
         dbg_print("Error: recv type: %02X\n", PACKET_TYPE(p_ACK));
+        packet_free(p_ACK);
     }
-    packet_free(p_ACK);
     dbg_print("---Login end---\n\n");
     return 0;
 }
@@ -81,6 +88,18 @@ int mouse_report(packingfunc func, void* data)
     dbg_print("---Sending Report packet---\n");
     send_packet(p_report);
     packet_free(p_report);
+    dbg_print("---Waiting ACK packet---\n");
+    packet* p_ACK = recv_packet();
+    if (PACKET_ACK_CHECK(p_ACK)) {
+        dbg_print("recv ACK.\n");
+    }
+    else if (PACKET_NACK_CHECK(p_ACK)) {
+        dbg_print("recv NACK.\n");
+    }
+    else {
+        dbg_print("Error: recv type: %02X\n", PACKET_TYPE(p_ACK));
+        packet_free(p_ACK);
+    }
     dbg_print("---Report end---\n\n");
     return 0;
 }
@@ -101,19 +120,15 @@ int mouse_control_send(packingfunc func, void* data)
 
 packet* mouse_control_recv()
 {
-    packet* p_poll = packet_allocate();
-    
     dbg_print("---Preparing Control packet(poll)---\n");
-    p_poll->message_type = CONTROL;
     dbg_print("---Sending Control packet---\n");
-    send_packet(p_poll);
+    send_packet(&local_CONTROL_ASK);
     dbg_print("---Control end(poll)---\n");
 
     dbg_print("---Waiting---");
     packet* p_control = recv_packet();
 
     if (PACKET_ACK_CHECK(p_control)) {
-        packet_free(p_control);
         return NULL;
     }
     else 
@@ -128,9 +143,23 @@ int mouse_logout()
     dbg_print("---Sending Logout packet---\n");
     send_packet(p_logout);
     packet_free(p_logout);
+    dbg_print("---Waiting ACK packet---\n");
+    packet* p_ACK = recv_packet();
+    if (PACKET_ACK_CHECK(p_ACK)) {
+        dbg_print("recv ACK.\n");
+    }
+    else if (PACKET_NACK_CHECK(p_ACK)) {
+        dbg_print("recv NACK.\n");
+    }
+    else {
+        dbg_print("Error: recv type: %02X\n", PACKET_TYPE(p_ACK));
+        packet_free(p_ACK);
+    }
     dbg_print("---Logout end---\n\n");
     return 0;
 }
+
+
 
 void _print_head(packet* p)
 {
@@ -186,34 +215,36 @@ int send_packet(packet* p)
 #define RECV_BUFFER_SIZE 100
 packet* recv_packet()
 {
-    unsigned char buffer[RECV_BUFFER_SIZE];
-    int buflen;
+    int buflen = 0;
+    packet* p = NULL;
 
-    packet* p = packet_allocate();
+    unsigned char buffer[RECV_BUFFER_SIZE] = {0};
 
     //block!
     while (1) {
         buflen = recv(sockfd, buffer, RECV_BUFFER_SIZE, 0);
         if (buflen > 0) {
-            dbg_print("Recv packet:");
-            p->message_type = buffer[0];
-            //TODO: bufsize
-            /* if (buflen - 1 > p->size - p->content_length) {
-             *     packet_reallocate(p, p->content_length + buflen - 1);
-             *}
-             */
-            memcpy(p->payload, buffer + 1, buflen - 1);
-            p->content_length += buflen - 1;
-        }
-        else if (buflen < 0 &&(errno == EAGAIN||errno == EWOULDBLOCK||errno == EINTR)) {
-            continue;
-        }
-        else {
-            dbg_print("Test:%d\n", buflen);
+            dbg_print("Recv packet @size %d\n", buflen);
+            if (buffer[0] == ACK) {
+                p = &local_ACK;
+            }
+            else if (buffer[0] == NACK) {
+                p = &local_NACK;
+            }
+            else {
+                p->message_type = buffer[0];
+                packet_put_buffer(p, buffer, buflen - 1);
+            }
             break;
         }
-        // if (buflen != RECV_BUFFER_SIZE)
-        //     rs = 0;
+        else if (buflen < 0) {
+            if (errno == EAGAIN||errno == EWOULDBLOCK||errno == EINTR) {
+                continue;
+            }
+            else {
+                break;
+            }
+        }
     }
 
     _print_head(p);
@@ -291,6 +322,9 @@ void packet_put_char(packet* p, char n)
 void packet_put_buffer(packet* p, unsigned char* buffer, int length)
 {
     int re_alloc = 0, new_size = p->size;
+    if (length == 0)
+        return;
+
     while (new_size < p->content_length + length) {
         new_size *= 2;
         re_alloc = 1;
@@ -310,3 +344,24 @@ void packet_put_buffer(packet* p, unsigned char* buffer, int length)
     p->content_length += length;
 #endif
 }
+
+static packet local_ACK = {
+    ACK,
+    NULL,
+    0,
+    0
+};
+
+static packet local_NACK = {
+    NACK,
+    NULL,
+    0,
+    0
+};
+
+static packet local_CONTROL_ASK = {
+    CONTROL,
+    NULL,
+    0,
+    0
+};
