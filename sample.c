@@ -1,32 +1,43 @@
 #include "mouse.h"
 #include <stdio.h>
+#include <string.h>
 
 #define MOUSE_HOST "localhost"
 #define MOUSE_PORT 10659
 
-typedef struct testdata {
-    float a;
-    double b;
-} testdata;
+#define KEY_FOR_REPORT1 "218c4326d373fc8d0e4b9db529330661"
 
-packet* pack_two_float(packet* p, void* data)
+typedef struct reportData {
+    int device_id;
+    int report_id;
+    float field0;
+    int field1;
+    unsigned char* field2;
+} reportData;
+
+packet* pack_report(packet* p, void* data)
 {
-    testdata* dataptr = (testdata*)data;
-    packet_put_int(p, 10);//device id
-    packet_put_float(p, dataptr->a);
-    packet_put_double(p, dataptr->b);
+    reportData* dataptr = (reportData*)data;
+
+    packet_put_int(p, dataptr->device_id);
+    packet_put_int(p, dataptr->report_id);
+    packet_put_float(p, dataptr->field0);
+    packet_put_int(p, dataptr->field1);
+    
+    packet_put_buffer(p, dataptr->field2, 8);
     return p;
 }
 
 int main()
 {
     printf("hello!\n");
-    mouse_init(0x12345678, MOUSE_HOST, MOUSE_PORT);
-    mouse_login("abcdefghijklmnopqrstuvwxyzabcdef");
+    mouse_init(1, MOUSE_HOST, MOUSE_PORT);
 
-    testdata data = { 0.4f, 0.005 };
-    mouse_report(pack_two_float, (void*)&data);
-    
-    mouse_logout();
+    if (mouse_login(KEY_FOR_REPORT1))
+    {
+        reportData data = { 1, 4, 0.05f, 5678, "abcd1234"};
+        mouse_report(pack_report, (void *)&data);
+        mouse_logout();
+    }
     return 0;
 }
