@@ -28,7 +28,6 @@ static struct hostent* host;
 
 static packet local_ACK;
 static packet local_NACK;
-static packet local_CONTROL_ASK;
 
 int mouse_init(int d, char* host_name, int port)
 {
@@ -54,6 +53,8 @@ int mouse_init(int d, char* host_name, int port)
 
 int mouse_login(char* device_secret)
 {
+    int ret = 0;
+
     packet* p_login = packet_allocate();
     dbg_print("---Preparing Login packet---\n");
     p_login->message_type = LOGIN;
@@ -66,16 +67,17 @@ int mouse_login(char* device_secret)
     packet* p_ACK = recv_packet();
     if (PACKET_ACK_CHECK(p_ACK)) {
         dbg_print("recv ACK.\n");
+        ret = 1;
     }
     else if (PACKET_NACK_CHECK(p_ACK)) {
-        dbg_print("recv NACK.\n");
+        dbg_print("recv NACK. Login Failed.\n");
     }
     else {
         dbg_print("Error: recv type: %02X\n", PACKET_TYPE(p_ACK));
         packet_free(p_ACK);
     }
     dbg_print("---Login end---\n\n");
-    return 0;
+    return ret;
 }
 
 int mouse_report(packingfunc func, void* data)
@@ -114,21 +116,42 @@ int mouse_control_send(packingfunc func, void* data)
     dbg_print("---Sending Control packet---\n");
     send_packet(p_control);
     packet_free(p_control);
+    dbg_print("---Waiting ACK packet---\n");
+    packet* p_ACK = recv_packet();
+    if (PACKET_ACK_CHECK(p_ACK)) {
+        dbg_print("recv ACK.\n");
+    }
+    else if (PACKET_NACK_CHECK(p_ACK)) {
+        dbg_print("recv NACK.\n");
+    }
+    else {
+        dbg_print("Error: recv type: %02X\n", PACKET_TYPE(p_ACK));
+        packet_free(p_ACK);
+    }
     dbg_print("---Control end(tx)---\n\n");
     return 0;
 }
 
-packet* mouse_control_recv()
+packet* mouse_control_recv(int device_id, int control_id)
 {
+    packet* p_control = packet_allocate();
     dbg_print("---Preparing Control packet(poll)---\n");
+    p_control->message_type = CONTROL;
+    packet_put_buffer(p_control, (unsigned char*)"R", 1);
+    packet_put_int(p_control, device_id);
+    packet_put_int(p_control, control_id);
     dbg_print("---Sending Control packet---\n");
-    send_packet(&local_CONTROL_ASK);
+    send_packet(p_control);
+    packet_free(p_control);
     dbg_print("---Control end(poll)---\n");
 
     dbg_print("---Waiting---");
-    packet* p_control = recv_packet();
+    packet* p_ACK = recv_packet();
 
-    if (PACKET_ACK_CHECK(p_control)) {
+    if (PACKET_ACK_CHECK(p_ACK)) {
+        return NULL;
+    }
+    if (PACKET_NACK_CHECK(p_ACK)) {
         return NULL;
     }
     else 
@@ -151,15 +174,9 @@ int mouse_logout()
     else if (PACKET_NACK_CHECK(p_ACK)) {
         dbg_print("recv NACK.\n");
     }
-    else {
-        dbg_print("Error: recv type: %02X\n", PACKET_TYPE(p_ACK));
-        packet_free(p_ACK);
-    }
     dbg_print("---Logout end---\n\n");
     return 0;
 }
-
-
 
 void _print_head(packet* p)
 {
@@ -354,13 +371,6 @@ static packet local_ACK = {
 
 static packet local_NACK = {
     NACK,
-    NULL,
-    0,
-    0
-};
-
-static packet local_CONTROL_ASK = {
-    CONTROL,
     NULL,
     0,
     0
