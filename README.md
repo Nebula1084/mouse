@@ -69,10 +69,12 @@ POST
 | char | Deprecated, equals to string(1) |
 
 
-
-
 ### 2. 基于 TCP 的二进制协议
-#### 2.1 mouse_init()
-(╯' - ')╯︵ ┻━┻,来不及写
-
+#### 2.1 
+(╯' - ')╯︵ ┻━┻,来不及写,请参考sample.c以及mouse.h
+#### 2.2 BUG
+服务器有规律但找不到规律地多发送一个字节的0于Payload的末尾(接受CONTROL包时)。也有可能是C程序的锅。
+如field0(string(9)) = 'abcdefghi', field1(int) = 0x7fffff0f 会多发送一个字节0;
+但当field1 = 1有概率没有。
+不过对读数据没有影响。
 ### 3. Web
