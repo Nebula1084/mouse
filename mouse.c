@@ -230,7 +230,7 @@ int send_packet(packet* p)
 #define RECV_BUFFER_SIZE 100
 packet* recv_packet()
 {
-    int buflen = 0;
+    int buflen = 0, i;
     packet* p = NULL;
 
     unsigned char buffer[RECV_BUFFER_SIZE] = {0};
@@ -240,10 +240,6 @@ packet* recv_packet()
         buflen = recv(sockfd, buffer, RECV_BUFFER_SIZE, 0);
         if (buflen > 0) {
             dbg_print("Recv packet @size %d\n", buflen);
-            for (int i = 0; i < buflen; ++i)
-            {
-                printf("%x\n", buffer[i]);
-            }
             if (buffer[0] == ACK) {
                 p = &local_ACK;
             }
