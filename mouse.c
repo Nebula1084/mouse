@@ -145,17 +145,15 @@ packet* mouse_control_recv(int device_id, int control_id)
     packet_free(p_control);
     dbg_print("---Control end(poll)---\n");
 
-    dbg_print("---Waiting---");
+    dbg_print("---Waiting---\n");
     packet* p_ACK = recv_packet();
 
-    if (PACKET_ACK_CHECK(p_ACK)) {
+    if (PACKET_TYPE(p_ACK) != CONTROL) {
         return NULL;
     }
-    if (PACKET_NACK_CHECK(p_ACK)) {
-        return NULL;
-    }
-    else 
+    else {
         return p_control;
+    }
 }
 
 int mouse_logout()
@@ -242,6 +240,10 @@ packet* recv_packet()
         buflen = recv(sockfd, buffer, RECV_BUFFER_SIZE, 0);
         if (buflen > 0) {
             dbg_print("Recv packet @size %d\n", buflen);
+            for (int i = 0; i < buflen; ++i)
+            {
+                printf("%x\n", buffer[i]);
+            }
             if (buffer[0] == ACK) {
                 p = &local_ACK;
             }
@@ -249,8 +251,9 @@ packet* recv_packet()
                 p = &local_NACK;
             }
             else {
+                p = packet_allocate();
                 p->message_type = buffer[0];
-                packet_put_buffer(p, buffer, buflen - 1);
+                packet_put_buffer(p, buffer + 1, buflen - 1);
             }
             break;
         }

@@ -2,10 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#define MOUSE_HOST "localhost"
+// #define MOUSE_HOST "localhost"
+#define MOUSE_HOST "106.2.108.194"
 #define MOUSE_PORT 10659
 
-#define KEY_FOR_REPORT1 "218c4326d373fc8d0e4b9db529330661"
+//md5(md5(device_id)+device_name)
+#define KEY_FOR_LOGIN "a04e820a8c636ba1eb121f6463d418ff"
 
 typedef struct reportData {
     int device_id;
@@ -31,12 +33,17 @@ packet* pack_report(packet* p, void* data)
 int main()
 {
     printf("hello!\n");
-    mouse_init(1, MOUSE_HOST, MOUSE_PORT);
 
-    if (mouse_login(KEY_FOR_REPORT1))
+    packet* pptr = NULL;
+    mouse_init(3, MOUSE_HOST, MOUSE_PORT);
+
+    if (mouse_login(KEY_FOR_LOGIN))
     {
-        reportData data = { 1, 4, 0.05f, 5678, "abcd1234"};
+        reportData data = { 3, 4, 0.001f, 12345678, "ABCDEFGH"};
         mouse_report(pack_report, (void *)&data);
+
+        //pptr = mouse_control_recv(1, 1);
+
         mouse_logout();
     }
     return 0;

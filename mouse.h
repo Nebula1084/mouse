@@ -29,7 +29,7 @@ int mouse_login(char* device_secret);
 
 int mouse_report(packingfunc func, void* data);
 int mouse_control_send(packingfunc func, void* data);
-packet* mouse_control_recv();
+packet* mouse_control_recv(int device_id, int control_id);
 int mouse_logout();
 
 packet* packet_allocate();
