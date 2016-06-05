@@ -191,6 +191,7 @@ void _print_head(packet* p)
 
 void _print_payload(packet* p)
 {
+#ifndef NDEBUG
     int i = 0, length = p->content_length;
     unsigned char* sptr = p->payload;
 
@@ -203,6 +204,7 @@ void _print_payload(packet* p)
     /* display 8 bytes per line. */
     if (length % 8 != 0)
         dbg_print("\n");
+#endif
 }
 
 int send_packet(packet* p)
@@ -230,7 +232,7 @@ int send_packet(packet* p)
 #define RECV_BUFFER_SIZE 100
 packet* recv_packet()
 {
-    int buflen = 0, i;
+    int buflen = 0;
     packet* p = NULL;
 
     unsigned char buffer[RECV_BUFFER_SIZE] = {0};
@@ -356,7 +358,7 @@ void packet_put_buffer(packet* p, unsigned char* buffer, int length)
         p->content_length++;
     }
 #else  
-    memcpy(buffer, p->payload, length);
+    memcpy(p->payload + p->content_length, buffer, length);
     p->content_length += length;
 #endif
 }
