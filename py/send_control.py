@@ -12,8 +12,7 @@ try:
         'control_id': 2,
         'sr' : 'S',
         'target_id' : 3,
-        'field0': 10,
-        'field1': 0.5
+        'payload': '{"field0": "4","field1": "0.4"}'
     }
 
     headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
