@@ -1,3 +1,6 @@
+### **为了兼容Magica组，已经可以接受POST的json，并且原格式也依旧可以放心食用。样例将于py/json_xxx.py中。**
+### **返回数据更改为Magica组的格式，在GET /api/data以及POST /api/control(轮询数据时)返回中均带有code字段以供判断。[1.2.4 返回数据](#1) [1.3.2 HTTP请求方式](#2)**
+
 ### 1. 基于 HTTP 的明文协议
 #### 1.1 发送REPORT包
 ##### 1.1.1 URL
@@ -46,21 +49,29 @@ device_id=1&report_id=1&page=0&size=10
 | report_id | int | 注册的report编号 |
 | size(optional) | unsigned int | 每页(每次)请求数量 |
 | page(optional)  | unsigned int | 请求页编号 |
-##### 1.2.4 返回数据
+<h5 id="1">1.2.4 返回数据</h5>
 返回以时间排序的size条数据，从第page\*size条到(page+1)\*size-1，即相当于以每页size条分页显示的第page页。  
 若希望返回最新的n条数据，可使page=0, size=n。
 ```
-[{"id":4,"defId":1,"authId":1,"deviceId":1,"time":"2016-06-07T20:56:01.000Z","fields":{"field1":"0.4","field0":"4"},"date":1465304161000},...]
+{
+  "code": 0, // 请求成功
+  "data":[
+    {"id":4,"defId":1,"authId":1,"deviceId":1,"time":"2016-06-07T20:56:01.000Z","fields":{"field1":"0.4","field0":"4"},"date":1465304161000},
+    ...
+  ]
+}
+
 ```
 
 #### 1.3 CONTROL包
 ##### 1.3.1 URL
 /api/control
-##### 1.3.2 HTTP请求方式
+<h5 id="2">1.3.2 HTTP请求方式</h5>
 POST  
-成功: 200  
-失败: 40x  
-##### 1.3.3 发送CONTROL时请求参数
+发送CONTROL成功: 200  
+发送CONTROL失败: 40x  
+**NEW!:** 轮询CONTROL无数据会返回200，内容详见1.3.4.2
+##### 1.3.3.1 发送CONTROL时请求参数
 |字段名|类型|说明|
 |:--:|:--:|:--:|
 | auth_id | int | 连入设备编号 |
@@ -79,14 +90,17 @@ POST
 | control_id | int | 注册的control编号 |
 | sr | string(1) | "R", Receive, **注意是大写** |
 ##### 1.3.4.2 接受CONTROL时返回数据
-格式:JSON  
+格式:JSON  (请自行无视不需要的字段)
 样例:
 ```
-{"id":15,"defId":2,"authId":3,"deviceId":3,"time":"2016-05-29T18:02:23.646Z","payload":{"field1":"0.5","field0":"10"},"targetId":3,"fellowPacketId":-1,"sr":"S","date":1464516143646}
+{"code":0,"id":15,"defId":2,"authId":3,"deviceId":3,"time":"2016-05-29T18:02:23.646Z","payload":{"field1":"0.5","field0":"10"},"targetId":3,"fellowPacketId":-1,"sr":"S","date":1464516143646}
+or
+{"code":-1}
 ```
 
 |字段名|类型|说明|
 |:--:|:--:|:--:|
+| code | int | 请求状态返回值 |
 | id | int | packet的编号 |
 | defId| int | control定义编号 |
 | authId| int | 连入设备编号 |
@@ -102,6 +116,7 @@ POST
 | float |  |
 | string |  |
 | char | Deprecated, equals to string(1) |
+| ~~double~~ | 说好的有double，最后就没有了。尴尬。 |
 
 
 ### 2. 基于 TCP 的二进制协议
