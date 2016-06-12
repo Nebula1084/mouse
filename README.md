@@ -9,7 +9,16 @@ POST
 ##### 1.1.3 请求参数
 样例:
 ```
-auth_id=1&auth_key=1eecf1c5e848ff42d88e5599b3e8dfc0&device_id=1&report_id=1&payload={"field0":"10","field1":"0.5"}
+{
+    "auth_id": 1,
+    "auth_key": "1eecf1c5e848ff42d88e5599b3e8dfc0",
+    "device_id": 1,
+    "report_id": 1,
+    "payload": {
+        "field0": 10,
+        "field1": 0.5
+    }
+}
 ```
 |字段名|类型|说明|
 |:--:|:--:|:--:|
@@ -96,10 +105,22 @@ POST
 
 
 ### 2. 基于 TCP 的二进制协议
-#### 2.1
-(╯' - ')╯︵ ┻━┻,来不及写,请参考sample.c以及mouse.h
+#### 2.1 Man
+~~(╯' - ')╯︵ ┻━┻,来不及写,请参考sample.c以及mouse.h~~  
+1. ```int mouse_init(int device_id, char* host_name, int port);```  
+Note: 参照sample.c，初始化失败立即exit。
+
+2. ```int mouse_login(char* device_secret);```  
+Note: 登录成功返回0，失败返回-1，因为被吐槽了所以改了一下，原来的版本也可以放心食用。
+
+3. ```int mouse_report(packingfunc func, void* data);```  
+```int mouse_control_send(packingfunc func, void* data);```  
+Note: 参照sample.c，需要自定义打包数据的函数, 以及数据自身的结构体。
+
+4. ```packet* mouse_control_recv(int device_id, int control_id);```
+Note: 读出的packet中带有所有注册时的字段信息，注意没有其他额外信息。需要自己处理，没有control时返回NULL，返回数据记得free。
+
 #### 2.2 BUG
 服务器有规律但找不到规律地多发送一个字节的0于Payload的末尾(接受CONTROL包时)。也有可能是C程序的锅。  
 如field0(string(9)) = 'abcdefghi', field1(int) = 0x7fffff0f 会多发送一个字节0; 但当field1 = 1有概率没有。  
 不过对读数据没有影响。
-### 3. Web

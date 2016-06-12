@@ -53,7 +53,7 @@ int mouse_init(int d, char* host_name, int port)
 
 int mouse_login(char* device_secret)
 {
-    int ret = 0;
+    int ret = -1;
 
     packet* p_login = packet_allocate();
     dbg_print("---Preparing Login packet---\n");
@@ -67,7 +67,7 @@ int mouse_login(char* device_secret)
     packet* p_ACK = recv_packet();
     if (PACKET_ACK_CHECK(p_ACK)) {
         dbg_print("recv ACK.\n");
-        ret = 1;
+        ret = 0;
     }
     else if (PACKET_NACK_CHECK(p_ACK)) {
         dbg_print("recv NACK. Login Failed.\n");
@@ -302,7 +302,7 @@ packet* packet_reallocate(packet* p, int new_size)
         fatal_error(); //TOFIX: ?, what about packet_allocate?
     }
     p->payload = buffer;
-    return p;       
+    return p;
 }
 
 void packet_free(packet* p)
@@ -357,7 +357,7 @@ void packet_put_buffer(packet* p, unsigned char* buffer, int length)
         dbg_print("%d:%d\n", i, buffer[i]);
         p->content_length++;
     }
-#else  
+#else
     memcpy(p->payload + p->content_length, buffer, length);
     p->content_length += length;
 #endif
