@@ -1,4 +1,5 @@
-### **为了兼容Magica组，已经可以接受POST的json，并且原格式也依旧可以放心食用。样例将于py/json_xxx.py中。**
+### **有关POST数据的问题，Magica组使用的是json。很抱歉由于开始没有进行良好的协调，我们使用的依然是传统的参数方式，请参考py目录**
+### **有关网站的一些使用注意事项已更新**
 ### **返回数据更改为Magica组的格式，在GET /api/data以及POST /api/control(轮询数据时)返回中均带有code字段以供判断。[1.2.4 返回数据](#1) [1.3.2 HTTP请求方式](#2)**
 
 ### 1. 基于 HTTP 的明文协议
@@ -12,16 +13,7 @@ POST
 ##### 1.1.3 请求参数
 样例:
 ```
-{
-    "auth_id": 1,
-    "auth_key": "1eecf1c5e848ff42d88e5599b3e8dfc0",
-    "device_id": 1,
-    "report_id": 1,
-    "payload": {
-        "field0": 10,
-        "field1": 0.5
-    }
-}
+auth_id=1&auth_key=1eecf1c5e848ff42d88e5599b3e8dfc0&device_id=1&report_id=1&payload={"field0": 10,"field1": 0.5}}
 ```
 |字段名|类型|说明|
 |:--:|:--:|:--:|
@@ -43,6 +35,7 @@ GET
 ```
 device_id=1&report_id=1&page=0&size=10
 ```
+
 |字段名|类型|说明|
 |:--:|:--:|:--:|
 | device_id | int | 设备编号 |
@@ -90,7 +83,7 @@ POST
 | control_id | int | 注册的control编号 |
 | sr | string(1) | "R", Receive, **注意是大写** |
 ##### 1.3.4.2 接受CONTROL时返回数据
-格式:JSON  (请自行无视不需要的字段)
+格式:JSON  (请自行无视不需要的字段)  
 样例:
 ```
 {"code":0,"id":15,"defId":2,"authId":3,"deviceId":3,"time":"2016-05-29T18:02:23.646Z","payload":{"field1":"0.5","field0":"10"},"targetId":3,"fellowPacketId":-1,"sr":"S","date":1464516143646}
@@ -120,7 +113,7 @@ or
 
 
 ### 2. 基于 TCP 的二进制协议
-#### 2.1 Man
+#### 2.1
 ~~(╯' - ')╯︵ ┻━┻,来不及写,请参考sample.c以及mouse.h~~  
 1. ```int mouse_init(int device_id, char* host_name, int port);```  
 Note: 参照sample.c，初始化失败立即exit。
@@ -139,3 +132,8 @@ Note: 读出的packet中带有所有注册时的字段信息，注意没有其�
 服务器有规律但找不到规律地多发送一个字节的0于Payload的末尾(接受CONTROL包时)。也有可能是C程序的锅。  
 如field0(string(9)) = 'abcdefghi', field1(int) = 0x7fffff0f 会多发送一个字节0; 但当field1 = 1有概率没有。  
 不过对读数据没有影响。
+
+### 3.Website
+#### 3.1 注意事项
+1. 设备页面中发送control，即发送目标选为改设备。
+2. 设备页面中的Control Log显示的该设备**发送**的control包记录，而不是发送到该设备的control。

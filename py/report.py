@@ -2,15 +2,17 @@
 #coding=utf8
 
 import httplib, urllib
+import json
 
 httpClient = None
 try:
+    payload = {'field0': 0.5, 'field1': 20, 'field2': 'ABCDEFGH'}
     report_data = {
         'auth_id': 3,
         'auth_key': 'a04e820a8c636ba1eb121f6463d418ff',
-        'device_id': ,
-        'report_id': ,
-        'payload': '{"number": "10","field1": "0.4"}'
+        'device_id': 3,
+        'report_id': 4,
+        'payload': json.dumps(payload),
     }
 
     headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
