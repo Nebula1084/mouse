@@ -63,7 +63,7 @@ device_id=1&report_id=1&page=0&size=10
 POST  
 发送CONTROL成功: 200  
 发送CONTROL失败: 40x  
-**NEW!:** 轮询CONTROL无数据会返回200，内容详见1.3.4.2
+**NEW!:** 轮询CONTROL无数据会阻塞2分钟,结束后会返回200，内容详见1.3.4.2
 ##### 1.3.3.1 发送CONTROL时请求参数
 |字段名|类型|说明|
 |:--:|:--:|:--:|
