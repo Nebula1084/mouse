@@ -1,4 +1,4 @@
-### **有关POST数据的问题，Magica组使用的是json。很抱歉由于开始没有进行良好的协调，我们使用的依然是传统的参数方式，请参考py目录**
+### **有关POST数据的问题，Magica组使用的是json。在更新api后，可以使用json格式，同时原有的以参数POST方式不受影响。但强烈推荐使用新API。详情参见以及样例py/json_*.py [1.4 兼容的json API](#3)**
 ### **有关网站的一些使用注意事项已更新**
 ### **轮询接收control数据已改为阻塞2分钟，与Magica组一致**
 ### **返回数据更改为Magica组的格式，在GET /api/data以及POST /api/control(轮询数据时)返回中均带有code字段以供判断。[1.2.4 返回数据](#1) [1.3.2 HTTP请求方式](#2)**
@@ -9,7 +9,7 @@
 /api/report
 ##### 1.1.2 HTTP请求方式
 POST  
-成功: 200  
+成功: 200，**并返回{code:0}**，但推荐判断200。  
 失败: 40x  
 ##### 1.1.3 请求参数
 样例:
@@ -103,7 +103,42 @@ or
 | time | string | 时间 |
 | payload | json | 数据 |
 
-#### 1.4 数据类型
+<h4 id="3">1.4 兼容的json API说明</h4>
+##### 1.4.1 REPORT
+原地址不变，只是可以直接使用json，**注意HEADER要加入Accept:application/json以及Content-Type:application/json**，这样便可通用两个服务器，只有id和secret key的区别。详见json_report.py。
+```
+{
+    'auth_id': 1,
+    'auth_key': 'e4d3dc84ef92b76c71e3faf983e02c47',
+    'device_id': 1,
+    'report_id': 1,
+    'payload': {'field0': 0.5, 'field1': 10, 'field2': 'ABCDEFGH'}
+}
+```
+##### 1.4.2 SEND CONTROL
+新地址为api/push?device_id=xxx，与magi组一致。注意旧方案也是都是可以用的，没有任何变化。
+要想达到通用两个服务器的目的，只需在magi组发送内容的基础上添加control_id字段，我们会自行忽略payload中多余的type以及length字段。详见json_send.py。
+```
+{
+    'control_id': 1,
+    'payload': [
+        {'name': 'c1', 'value': 10},
+        {'name': 'c2', 'value': 10.23},
+    ]
+}
+```
+##### 1.4.3 RECV CONTROL
+同上，只需在magi组发送内容的基础上添加control_id字段。详见json_recv.py。
+```
+{
+    'auth_id': 1,
+    'auth_key': '85f4324d872b43578b57634f1a275dca',
+    'device_id': 1,
+    'control_id': 1,
+}
+```
+
+#### 1.5 数据类型
 |类型|说明|
 |:--:|:--:|
 | int |  |
@@ -116,6 +151,7 @@ or
 ### 2. 基于 TCP 的二进制协议
 #### 2.1
 ~~(╯' - ')╯︵ ┻━┻,来不及写,请参考sample.c以及mouse.h~~  
+
 1. ```int mouse_init(int device_id, char* host_name, int port);```  
 Note: 参照sample.c，初始化失败立即exit。
 
@@ -131,7 +167,7 @@ Note: 读出的packet中带有所有注册时的字段信息，注意没有其�
 
 #### 2.2 BUG
 服务器有规律但找不到规律地多发送一个字节的0于Payload的末尾(接受CONTROL包时)。也有可能是C程序的锅。  
-如field0(string(9)) = 'abcdefghi', field1(int) = 0x7fffff0f 会多发送一个字节0; 但当field1 = 1有概率没有。  
+如field0(string(9)) = 'abcdefghi', field1(int) = 0x7fffff0f 会多发送一个字节0。正常情况下并没有。  
 不过对读数据没有影响。
 
 ### 3.Website
